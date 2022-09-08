@@ -1,5 +1,1 @@
-from .geo_retriever import GeoRetriever
-
-__all__ = [
-    'GeoRetriever',
-]
+from geo_retriever import GeoRetriever
