@@ -1,1 +1,1 @@
-from geo_retriever import GeoRetriever
+from retriever import GeoRetriever
