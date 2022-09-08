@@ -1,4 +1,4 @@
-from heatflow import get_heatflow
+from geo_retriever.heatflow import get_heatflow
 
 class GeoRetriever:
     def __init__(self, coords=(-1.761873755588998, 54.9503096017342)):
