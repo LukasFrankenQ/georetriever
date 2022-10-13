@@ -14,7 +14,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def get_coords(x, y, dx=0.25, dy=0.25):
+def get_coords(x, y, time, dx=0.25, dy=0.25, dt="h"):
     '''
     Create GeoCutout coordinate system on the basis of slices and step sizes 
 
@@ -43,11 +43,26 @@ def get_coords(x, y, dx=0.25, dy=0.25):
         {
             "x": np.around(np.arange(-180, 180, dx), 9),
             "y": np.around(np.arange(-90, 90, dy), 9),
+            "time": pd.date_range(start="1959", end="now", freq=dt),
         }
     )
 
     ds = ds.assign_coords(lon=ds.coords["x"], lat=ds.coords["y"])
-    ds = ds.sel(x=x, y=y)
+    ds = ds.sel(x=x, y=y, time=time)
 
     return ds
+    
+
+def maybe_swap_spatial_dims(ds, namex="x", namey="y"):
+    """Swap order of spatial dimensions according to atlite concention."""
+    swaps = {}
+    lx, rx = ds.indexes[namex][[0, -1]]
+    ly, uy = ds.indexes[namey][[0, -1]]
+
+    if lx > rx:
+        swaps[namex] = slice(None, None, -1)
+    if uy < ly:
+        swaps[namey] = slice(None, None, -1)
+
+    return ds.isel(**swaps) if swaps else ds
     

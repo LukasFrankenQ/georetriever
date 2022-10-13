@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 class GeoCutout:
     
-    CRS = "EPSG:4236"
+    CRS = 4326
     
     def __init__(self, path, **cutoutparams):
         """
@@ -36,12 +36,21 @@ class GeoCutout:
             Outer longitudinal bounds for the cutout (west, east) 
         y : slice, optional
             Outer latitudinal bounds for the cutout (south, north) 
+        time : str | slice
+            Time range to include in the cutout, e.g. "2011" or
+            ("2011-01-05", "2011-01-25")
+            This is necessary when building a new cutout.
         dx : float, optional
             Step size of the x coordinate. The default is 0.25
         dy : float, optional
             Step size of the y coordinate. The default is 0.25
+        dt : str, optional
+            Frequency of the time coordinate. The default is 'h'. Valid are all
+            pandas offset aliases.
         """
         
+        self._prepared = False
+
         path = Path(path).with_suffix('.nc')
 
         logger.debug('To be implemented: method to load path and check existence') 
@@ -52,12 +61,13 @@ class GeoCutout:
             logger.info(f"Building new cutout {path}") 
            
             try:
-                x = cutoutparams.pop('x') 
-                y = cutoutparams.pop('y') 
+                x = cutoutparams.pop("x") 
+                y = cutoutparams.pop("y")
+                time = cutoutparams.pop("time")
             except KeyError:
                 raise TypeError("x, y must be provided as slice")   
                 
-            coords = get_coords(x, y)
+            coords = get_coords(x, y, time)
 
             attrs = {
                 "prepared_features": list(),
@@ -116,5 +126,21 @@ class GeoCutout:
         """Total bounds of the area covered by the cutout (x, y, X, Y)."""
         return self.extent[[0, 2, 1, 3]]
 
-        
+    @property
+    def prepared(self):
+        """Boolean indicating if all features have been prepared"""
+        logging.warning("GeoCutout.prepared is not yet fully implemented")
+        return self._prepared
+
+    @property
+    def chunks(self):
+        """Chunking of the cutout data used by dask."""
+        chunks = {
+            k.lstrip("chunksize_"): v
+            for k, v in self.data.attrs.items()
+            if k.startswith("chunksize_")
+        }
+        return None if chunks == {} else chunks
+            
+    
 
