@@ -64,12 +64,18 @@ class GeoCutout:
                 x = cutoutparams.pop("x") 
                 y = cutoutparams.pop("y")
                 time = cutoutparams.pop("time")
-            except KeyError:
-                raise TypeError("x, y must be provided as slice")   
+                module = cutoutparams.pop("module")
+            except KeyError as exc:
+                raise TypeError(
+                    "Arguments 'time' and 'module' must be "
+                    "specified. Spatial bounds must either be "
+                    "passed via argument 'bounds' or 'x' and 'y'."
+                ) from exc
                 
             coords = get_coords(x, y, time)
 
             attrs = {
+                "module": module,
                 "prepared_features": list(),
                 **cutoutparams
             }
@@ -85,20 +91,24 @@ class GeoCutout:
         """name of the cutout"""
         return self.path 
 
+
     @property 
     def crs(self):
         """Coordinate reference system of cutout"""
         return self.CRS 
+
 
     @property
     def available_features(self):
         """Lists available geodata for the cutout""" 
         raise NotImplementedError("implement me") 
         
+
     @property 
     def coords(self):
         """Geographic coordinate of the cutout"""
         return self.data.coords
+
 
     @property
     def dx(self):
@@ -106,11 +116,13 @@ class GeoCutout:
         x = self.coords["x"]
         return round((x[-1] - x[0]).item() / (x.size - 1), 8)
 
+
     @property
     def dy(self):
         """Spatial resolution on the y coordinates."""
         y = self.coords["y"]
         return round((y[-1] - y[0]).item() / (y.size - 1), 8)
+    
 
     @property
     def extent(self):
@@ -121,16 +133,19 @@ class GeoCutout:
             [xs[0] - dx / 2, xs[-1] + dx / 2, ys[0] - dy / 2, ys[-1] + dy / 2]
         )
 
+
     @property
     def bounds(self):
         """Total bounds of the area covered by the cutout (x, y, X, Y)."""
         return self.extent[[0, 2, 1, 3]]
+
 
     @property
     def prepared(self):
         """Boolean indicating if all features have been prepared"""
         logging.warning("GeoCutout.prepared is not yet fully implemented")
         return self._prepared
+
 
     @property
     def chunks(self):
@@ -141,6 +156,15 @@ class GeoCutout:
             if k.startswith("chunksize_")
         }
         return None if chunks == {} else chunks
-            
+    
+
+    @property
+    def module(self):
+        """Data module of the geocutout"""
+        return self.data.attrs.get("module")
+    
+ 
+    
+    
     
 
