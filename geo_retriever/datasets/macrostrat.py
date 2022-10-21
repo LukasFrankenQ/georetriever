@@ -1,2 +1,3 @@
-features = dict()
-static_features = set()
+
+features = dict(lithography="lithography")
+crs = 4326
