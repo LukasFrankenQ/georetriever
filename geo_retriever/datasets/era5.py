@@ -145,9 +145,9 @@ def retrieve_data(product, chunks=None, tmpdir=None, lock=None, **updates):
         result.download(target)
     
     ds = xr.open_dataset(target, chunks=chunks or {})
-    if tmpdir is None:
-        logger.debug(f"Adding finalizer for {target}")
-        weakref.finalize(ds._file_obj._manager, noisy_unlink, target)
+    # if tmpdir is None:
+        # logger.debug(f"Adding finalizer for {target}")
+        # weakref.finalize(ds._file_obj._manager, noisy_unlink, target)
 
     return ds
 
@@ -179,5 +179,3 @@ def get_data(geocutout,
     datasets = map(retrieve_once, retrieval_times(coords))
 
     return xr.concat(datasets, dim="time").sel(time=coords["time"])
-        
-    

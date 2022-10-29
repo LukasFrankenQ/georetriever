@@ -64,7 +64,6 @@ class GeoCutout:
                 x = cutoutparams.pop("x") 
                 y = cutoutparams.pop("y")
                 time = cutoutparams.pop("time")
-                module = cutoutparams.pop("module")
             except KeyError as exc:
                 raise TypeError(
                     "Arguments 'time' and 'module' must be "
@@ -75,7 +74,6 @@ class GeoCutout:
             coords = get_coords(x, y, time)
 
             attrs = {
-                "module": module,
                 "prepared_features": list(),
                 **cutoutparams
             }
@@ -157,13 +155,6 @@ class GeoCutout:
         }
         return None if chunks == {} else chunks
     
-
-    @property
-    def module(self):
-        """Data module of the geocutout"""
-        return self.data.attrs.get("module")
-    
- 
     
     
     

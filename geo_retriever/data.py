@@ -14,8 +14,13 @@ logger = logging.getLogger(__name__)
 
 from datasets import modules as datamodules
 
+feature_mapping = {
+    "temperature": "era5",
+    "lithology": "macrostrat",
+}
 
-def get_features(geocutout, module, features, tmpdir=None):
+
+def get_feature(geocutout, module, feature, tmpdir=None):
     """
     Load the feature data for a given module.
     This get the data for a set of features from a module. All modules in
@@ -28,20 +33,27 @@ def get_features(geocutout, module, features, tmpdir=None):
 
     get_data = datamodules[module].get_data
      
-    for feature in features:
-        feature_data = delayed(get_data)(
-            geocutout, feature, tmpdir=tmpdir, lock=lock, **parameters
-        )
-        datasets.append(feature_data)
-    
+    feature_data = delayed(get_data)(
+        geocutout, feature, tmpdir=tmpdir, lock=lock, **parameters
+    )
+    datasets.append(feature_data)
+
     datasets = compute(*datasets)
-    
-    ds = xr.merge(datasets, compat="equals") 
-     
+
+    ds = xr.merge(datasets, compat="equals")
+
+    print("dataset: ", ds)    
+
     for v in ds:
 
+        print("v: ", v)
+        print("ds[v]: ", ds[v])
+        print("ds[v].attrs: ", ds[v].attrs)
+        
         ds[v].attrs["module"] = module
         fd = datamodules[module].features.items()
+        print("datamodules[module].features: ", datamodules[module].features)
+        print("--------------")
         ds[v].attrs["features"] = [k for k, l in fd if v in l].pop()
 
     return ds
@@ -68,33 +80,6 @@ def non_bool_dict(d):
     """Convert bool to int for netCDF4 storing"""
     return {k: v if not isinstance(v, bool) else int(v) for k, v in d.items()}
 
-
-def available_features(module=None):
-    """
-    Inspect the available features of all or a selection of modules.
-    Parameters
-    ----------
-    module : str/list, optional
-        Module name(s) which to inspect. The default None will result in all
-        modules
-    Returns
-    -------
-    pd.Series
-        A Series of all variables. The MultiIndex indicated which module
-        provides the variable and with which feature name the variable can be
-        obtained.
-    """   
-    features = {name: m.features for name, m in datamodules.items()}
-    features = (
-        pd.DataFrame(features)
-        .unstack()
-        .dropna()
-        .rename_axis(index=["module", "feature"])
-        .rename("variables")
-    )
-    if module is not None:
-        features = features.reindex(atleast_1d(module), level="module")
-    return features.explode()
 
 
 @maybe_remove_tmpdir
@@ -126,25 +111,34 @@ def geocutout_prepare(geocutout,
     logger.warning("Overwrite not yet implemented")
 
     if geocutout.prepared and not overwrite:
-        logger.info("gGeoCutout already prepared") 
+        logger.info("GeoCutout already prepared") 
         return geocutout
     
     logger.info(f"Storing temporary files in {tmpdir}")
    
-    modules = atleast_1d(geocutout.module)
     features = atleast_1d(features) if features else slice(None)
     prepared = set(atleast_1d(geocutout.data.attrs["prepared_features"]))
 
-    target = available_features(modules).loc[:, features].drop_duplicates()
+    print("features: ", features)
+    print("prepared: ", prepared)
+    logging.warning("Double download of prepared features not yet prevented")
 
-    for module in target.index.unique("module"):
-        missing_vars = target[module]
+    for feature in features:
+        assert feature in feature_mapping, f"No module for feature {feature} " + \
+            f"\n Available features: {feature_mapping}"
 
-        logging.info(f"Calculating and writing with module {module}:") 
-        missing_features = missing_vars.index.unique("feature") 
-        ds = get_features(geocutout, module, missing_features, tmpdir=tmpdir)
+    # for module in target.index.unique("module"):
+    for feature in features:
+        module = feature_mapping[feature]   
 
-        prepared |= set(missing_features)
+        # missing_vars = target[module]
+        # missing_features = missing_vars.index.unique("feature")
+
+        logging.info(f"Calculating {feature} with module {module}:") 
+
+        ds = get_feature(geocutout, module, feature, tmpdir=tmpdir)
+
+        prepared |= set(feature)
 
         geocutout.data.attrs.update(dict(
             prepared_features=list(prepared)
@@ -152,7 +146,7 @@ def geocutout_prepare(geocutout,
         attrs = non_bool_dict(geocutout.data.attrs)
         attrs.update(ds.attrs)
 
-        ds = geocutout.data.merge(ds[missing_vars.values]).assign_attrs(**attrs)
+        ds = geocutout.data.merge(ds[feature]).assign_attrs(**attrs)
 
         directory, filename = os.path.split(str(geocutout.path))
         fd, tmp = mkstemp(suffix=filename, dir=directory)
