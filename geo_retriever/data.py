@@ -146,6 +146,7 @@ def geocutout_prepare(geocutout,
         attrs = non_bool_dict(geocutout.data.attrs)
         attrs.update(ds.attrs)
 
+        logger.warning("fix line 150 in data.py")
         ds = geocutout.data.merge(ds[feature]).assign_attrs(**attrs)
 
         directory, filename = os.path.split(str(geocutout.path))
