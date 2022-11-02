@@ -16,6 +16,7 @@ from datasets import modules as datamodules
 
 feature_mapping = {
     "temperature": "era5",
+    # "temperature_soil": "era5",
     "lithology": "macrostrat",
 }
 
@@ -42,18 +43,10 @@ def get_feature(geocutout, module, feature, tmpdir=None):
 
     ds = xr.merge(datasets, compat="equals")
 
-    print("dataset: ", ds)    
-
     for v in ds:
-
-        print("v: ", v)
-        print("ds[v]: ", ds[v])
-        print("ds[v].attrs: ", ds[v].attrs)
         
         ds[v].attrs["module"] = module
         fd = datamodules[module].features.items()
-        print("datamodules[module].features: ", datamodules[module].features)
-        print("--------------")
         ds[v].attrs["features"] = [k for k, l in fd if v in l].pop()
 
     return ds
@@ -117,37 +110,33 @@ def geocutout_prepare(geocutout,
     logger.info(f"Storing temporary files in {tmpdir}")
    
     features = atleast_1d(features) if features else slice(None)
-    prepared = set(atleast_1d(geocutout.data.attrs["prepared_features"]))
+    prepared = list(atleast_1d(geocutout.data.attrs["prepared_features"]))
 
-    print("features: ", features)
-    print("prepared: ", prepared)
     logging.warning("Double download of prepared features not yet prevented")
 
     for feature in features:
         assert feature in feature_mapping, f"No module for feature {feature} " + \
             f"\n Available features: {feature_mapping}"
 
-    # for module in target.index.unique("module"):
+    logging.warning("Double importing not prevented yet")
     for feature in features:
-        module = feature_mapping[feature]   
-
-        # missing_vars = target[module]
-        # missing_features = missing_vars.index.unique("feature")
+        module = feature_mapping[feature]
 
         logging.info(f"Calculating {feature} with module {module}:") 
 
         ds = get_feature(geocutout, module, feature, tmpdir=tmpdir)
 
-        prepared |= set(feature)
+        prepared += [key for key in ds.keys()]
 
         geocutout.data.attrs.update(dict(
             prepared_features=list(prepared)
             ))
+
         attrs = non_bool_dict(geocutout.data.attrs)
         attrs.update(ds.attrs)
 
-        logger.warning("fix line 150 in data.py")
-        ds = geocutout.data.merge(ds[feature]).assign_attrs(**attrs)
+            # ds = geocutout.data.merge(ds[new_feature]).assign_attrs(**attrs)
+        ds = geocutout.data.merge(ds).assign_attrs(**attrs)
 
         directory, filename = os.path.split(str(geocutout.path))
         fd, tmp = mkstemp(suffix=filename, dir=directory)
