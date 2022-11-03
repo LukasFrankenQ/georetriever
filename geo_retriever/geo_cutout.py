@@ -71,7 +71,7 @@ class GeoCutout:
                     "passed via argument 'bounds' or 'x' and 'y'."
                 ) from exc
                 
-            coords = get_coords(x, y, time)
+            coords = get_coords(x, y, time, **cutoutparams)
 
             attrs = {
                 "prepared_features": list(),

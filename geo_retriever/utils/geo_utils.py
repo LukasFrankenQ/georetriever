@@ -1,4 +1,6 @@
+import numpy as np
 import re
+import pandas as pd
 
 def get_minor_major(line):
     line = line.lower()
@@ -6,8 +8,8 @@ def get_minor_major(line):
     minors = line.split('minor{')[-1].replace('}', '').split(',')
     return {"major": major, "minors": minors}
 
-def get_percentages(line):
 
+def get_percentages(line):
     liths = line.split(']')[:-1]
     shares = [part.split('[')[-1] for part in liths]
     shares = ['9' in part for part in shares]
@@ -27,11 +29,21 @@ def get_percentages(line):
 
 
 class Lith:
-    def __init__(self):
+    def __init__(self, lith=None, /):
         
-        self.composition = dict()        
+        self.composition = dict(major=None, minors=None, others=None) 
+        self._colors = np.zeros((0, 3))
+        
+        if lith is not None:
+            assert isinstance(lith, pd.Series)
+            self.interpret_macrostrat(lith, inplace=True)
 
-    def interpret_macrostrat(self, col, inplace=False):
+
+    def interpret_macrostrat(self, 
+                             col: pd.Series, 
+                             inplace=False,
+                             return_best_info=False, 
+                             ):
         """
         Takes a 'lith' column from the macrostrat database and 
         puts all found lithographies into the dictionary self.composition
@@ -45,48 +57,78 @@ class Lith:
         If a percentage range is given, this range is the item
        
         Args:
-            col(pd.Series): Series of sediments obtained at coords from macrostrat API
-        
+            col(pd.Series): Series of sediments 
+                            obtained at coords from macrostrat API
+            inplace(bool): as in Pandas objects
+            return_best_info(bool): if True, returns index of best information
         """
 
-
-        print("-------------------")
+        best_info = None
 
         for i, entry in col.iteritems():
             minor_major = None
-            
-            if 'sedimentary rock' in entry:
-                self.composition['sedimentary rock'] = None
-                continue
 
             entry = entry.lower()
             if 'major' in entry:
                 minor_major = get_minor_major(entry)
+                self.composition.update(minor_major)
+                best_info = i
             
             elif '%' in entry:
                 minor_major = get_percentages(entry)
+                self.composition.update(minor_major)
+                best_info = i
             
             else:
-            
                 entry = re.sub(r'[^a-zA-Z0-9 ]', '', entry)
                 entry = entry.replace(' and', '')
                 liths = [lith for lith in entry.split(' ') if len(lith) > 0]
 
-            if minor_major is None:
-                for rock in liths:
-                    if rock not in self.composition:
-                        self.composition[rock] = None
-            else:
-                self.composition[minor_major['major']] = 'major'            
-                self.composition = {**self.composition, **{lith: 'minor' for lith in minor_major['minors']}}
-        
-        # print(col)
-        # print(self.composition)
- 
-        if not inplace:
-            return self
+                if isinstance(self.composition["others"], list):
+                    self.composition["others"] = list(set(self.composition["others"] + liths))
+                else:
+                    self.composition["others"] = liths
 
+                if best_info is None:
+                    best_info = i
+
+
+        returns = list()
+        if not inplace:
+            returns.append(self)
+        if return_best_info:
+            returns.append(best_info)
+        if returns:
+            return returns 
 
 
     def __repr__(self):
-        return f"Major: {self.composition}"
+        return f"Lithology object with composition: \n {self.composition}"
+
+    @property
+    def empty(self):
+        """Returns True if no information has been passed to self.composition"""
+        return bool(len([val for val in self.composition.values() if val is not None]))
+
+    @property
+    def thermal_conductivity(self):
+        """Returns thermal conductivity as mean and variance"""
+        raise NotImplementedError("implement me")
+
+    @property
+    def thermal_capacity(self):
+        """Returns thermal capacity as mean and variance"""
+        raise NotImplementedError("implement me")
+        
+    @property
+    def colors(self):
+        """Returns the average of obtained colors""" 
+        if self._colors.shape[0] > 0:
+            return self._colors.mean(axis=0)
+        else:
+            return np.zeros(3)
+    
+    @colors.setter
+    def colors(self, value):
+        """appends new color to stack of colors"""
+        self._colors = np.vstack([self._colors, value])
