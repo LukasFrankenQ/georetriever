@@ -3,8 +3,11 @@ import requests
 import numpy as np
 import xarray as xr
 from io import StringIO
+from PIL import ImageColor
 
-# static_features = dict(lithography="lithography"])
+# from geo_retriever.utils import Lith
+from utils import Lith
+
 features = {"lithology": "lithology"}
 crs = 4326
 
@@ -46,13 +49,17 @@ def get_data(geocutout,
         result = StringIO(str(result, "utf-8"))
         result = gpd.read_file(result)
 
-        try:
-            result = result.loc[result["lith"].str.contains("Major")].iloc[0] 
-        except IndexError:        
-            result = result.iloc[0]
+        lith = Lith()
+        lith, best_info = lith.interpret_macrostrat(result["lith"], 
+                                                    return_best_info=True)
 
-        polygon = result.loc["geometry"]
-        lith = result.loc["lith"]
+        try:
+            color = result.iloc[best_info].loc["color"]
+            lith.colors = ImageColor.getcolor(color, "RGB")
+        except TypeError: 
+            pass     
+                
+        polygon = result.iloc[best_info].loc["geometry"]
 
         assign_mask = grid["geometry"].within(polygon)
         grid.loc[assign_mask, "lith"] = lith

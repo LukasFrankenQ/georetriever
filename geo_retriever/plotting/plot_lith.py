@@ -13,8 +13,8 @@ def plot_lith(liths):
 
     coords = liths.coords
 
-    x = lith["lithology"].coords["x"].to_numpy()
-    y = lith["lithology"].coords["y"].to_numpy()
+    x = coords["x"].to_numpy()
+    y = coords["y"].to_numpy()
    
     extent = [x.min(), x.max(), y.min(), y.max()]  
    
