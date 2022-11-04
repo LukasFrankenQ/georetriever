@@ -48,6 +48,8 @@ def get_data(geocutout,
         result = result.content 
         result = StringIO(str(result, "utf-8"))
         result = gpd.read_file(result)
+        
+        print(result['lith'])
 
         lith = Lith()
         lith, best_info = lith.interpret_macrostrat(result["lith"], 

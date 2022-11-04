@@ -29,9 +29,13 @@ def get_percentages(line):
 
 
 class Lith:
-    def __init__(self, lith=None, /):
+    def __init__(self, lith=None, /, comp=None):
         
-        self.composition = dict(major=None, minors=None, others=None) 
+        if comp is None:
+            self.composition = dict(major=None, minors=None, others=None) 
+        else:
+            self.composition = comp
+
         self._colors = np.zeros((0, 3))
         
         if lith is not None:
@@ -132,3 +136,36 @@ class Lith:
     def colors(self, value):
         """appends new color to stack of colors"""
         self._colors = np.vstack([self._colors, value])
+
+    @property
+    def major(self):
+        """Returns major lithology""" 
+        return self.composition["major"]
+    
+    @major.setter
+    def major(self, value):
+        """Sets major lithology""" 
+        assert isinstance(value, str)
+        self.composition["major"] = value
+
+    @property
+    def minors(self):
+        """returns minor lithologies""" 
+        return self.composition["minors"]
+    
+    @minors.setter
+    def major(self, value):
+        """sets minor lithologies""" 
+        assert isinstance(value, list)
+        self.composition["minors"] = value
+
+    @property
+    def others(self):
+        """returns unordered lithologies""" 
+        return self.composition["others"]
+    
+    @others.setter
+    def others(self, value):
+        """sets unoredered lithologies""" 
+        assert isinstance(value, list)
+        self.composition["others"] = value
