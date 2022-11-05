@@ -1,6 +1,15 @@
 import numpy as np
 import re
 import pandas as pd
+from copy import deepcopy
+from PIL import ImageColor
+
+nonelist = [None for _ in range(8)]
+
+
+def rgb2hex(r, g, b):
+    return '#{:02x}{:02x}{:02x}'.format(r, g, b)
+
 
 def get_minor_major(line):
     line = line.lower()
@@ -29,6 +38,12 @@ def get_percentages(line):
 
 
 class Lith:
+
+    index = ["major", 
+             "minor1", "minor2", "minor3",
+             "others1", "others2", "others3",
+             "colors"]
+
     def __init__(self, lith=None, /, comp=None):
         
         if comp is None:
@@ -96,7 +111,6 @@ class Lith:
                 if best_info is None:
                     best_info = i
 
-
         returns = list()
         if not inplace:
             returns.append(self)
@@ -107,7 +121,7 @@ class Lith:
 
 
     def __repr__(self):
-        return f"Lithology object with composition: \n {self.composition}"
+        return f"Lithology composition: \n {self.composition}"
 
     @property
     def empty(self):
@@ -128,9 +142,9 @@ class Lith:
     def colors(self):
         """Returns the average of obtained colors""" 
         if self._colors.shape[0] > 0:
-            return self._colors.mean(axis=0)
+            return self._colors.mean(axis=0).astype(int)
         else:
-            return np.zeros(3)
+            return np.zeros(3).astype(int)
     
     @colors.setter
     def colors(self, value):
@@ -145,7 +159,7 @@ class Lith:
     @major.setter
     def major(self, value):
         """Sets major lithology""" 
-        assert isinstance(value, str)
+        assert isinstance(value, str) or value is None
         self.composition["major"] = value
 
     @property
@@ -154,9 +168,12 @@ class Lith:
         return self.composition["minors"]
     
     @minors.setter
-    def major(self, value):
+    def minors(self, value):
         """sets minor lithologies""" 
-        assert isinstance(value, list)
+        if not isinstance(value, list):
+            value = [value]
+        else:
+            value = [val for val in value if val is not None]
         self.composition["minors"] = value
 
     @property
@@ -166,6 +183,59 @@ class Lith:
     
     @others.setter
     def others(self, value):
-        """sets unoredered lithologies""" 
-        assert isinstance(value, list)
+        """sets unordered lithologies""" 
+        if not isinstance(value, list):
+            value = [value]
+        else:
+            value = [val for val in value if val is not None]
         self.composition["others"] = value
+
+    def tolist(self):
+        """ 
+        composition and colors from self are returned as a list in order
+        [major, minor1, minor2, minor3, other1, other2, other3, color] 
+        """
+        
+        aslist = deepcopy(nonelist)
+        aslist[0] = self.major
+        aslist[1:1+len(self.minors)] = self.minors
+        aslist[4:4+len(self.others)] = self.others
+        aslist[-1] = rgb2hex(*self.colors)
+
+        return aslist
+
+    @classmethod
+    def from_list(cls, lithlist):
+        """
+        Creates a Lith object from a list in order
+        [major, minor1, minor2, minor3, others1, others2, others3, color] 
+        """
+
+        instance = cls()
+        instance.major = lithlist[0]
+        instance.minors = lithlist[1:4]
+        instance.others = lithlist[4:7]
+        instance.colors = ImageColor.getcolor(lithlist[-1], "RGB")
+
+        return instance
+
+
+
+def get_random_lith():
+    """Passes a lithography oject, randomly filled out as it
+    might be after a Macrostrat call"""
+
+    lith = Lith() 
+    stones = ["limestone", 
+              "clay", 
+              "carbonated rock", 
+              "sedimentary", 
+              "plutonic rock"]
+
+    if np.random.rand() > 0.3:
+        lith.major = np.random.choice(stones)
+    lith.minors = np.random.choice(stones, size=np.random.randint(0, 4)).tolist()
+    lith.others = np.random.choice(stones, size=np.random.randint(0, 4)).tolist()
+    lith.colors = np.random.randint(0, 256, size=(3))
+
+    return lith
