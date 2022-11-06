@@ -33,7 +33,6 @@ def get_percentages(line):
     result = dict()
     result["minors"] = [lith for i, lith in enumerate(liths) if not shares[i]] 
     result["major"] = liths[shares.index(True)]
-    
     return result
 
 
