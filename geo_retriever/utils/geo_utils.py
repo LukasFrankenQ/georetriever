@@ -1,6 +1,8 @@
 import numpy as np
+from itertools import product
 import re
 import pandas as pd
+import xarray as xr
 from copy import deepcopy
 from PIL import ImageColor
 
@@ -154,7 +156,7 @@ class Lith:
     def major(self):
         """Returns major lithology""" 
         return self.composition["major"]
-    
+
     @major.setter
     def major(self, value):
         """Sets major lithology""" 
@@ -218,7 +220,41 @@ class Lith:
 
         return instance
 
+    @classmethod
+    def to_dataset(cls, da):
+        """
+        Transforms a xr.DataArray of Lith objects into a xr.Dataset with
+        str entries that are the list version of Lith objects (see the 'tolist()'
+        method)
+        The resulting dataset can be stored as a netcdf file
+        
+        Args:
+            da(xr.DataArray): entries must be Lith objects 
+       
+        Returns:
+            xr.Dataset with Lith.index as vars. Coords are copied from da
 
+        """ 
+
+        coords = da.coords
+        shape = da.shape
+        
+        da_np = da.to_numpy()
+        hold = np.zeros((8,)+da.shape).astype(str)
+
+        for i, j in product(range(shape[0]), 
+                            range(shape[1])):
+            hold[:,i,j] = da_np[i,j].tolist()
+
+        return xr.Dataset(
+            data_vars={
+                var_name: (["x", "y"], hold[i])
+                for i, var_name in enumerate(Lith.index)
+            },
+            coords=coords,
+        )     
+
+                
 
 def get_random_lith():
     """Passes a lithography oject, randomly filled out as it
