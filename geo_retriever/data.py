@@ -13,6 +13,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 from datasets import modules as datamodules
+from utils.geo_utils import Lith
 
 feature_mapping = {
     "temperature": "era5",
@@ -73,6 +74,26 @@ def non_bool_dict(d):
     """Convert bool to int for netCDF4 storing"""
     return {k: v if not isinstance(v, bool) else int(v) for k, v in d.items()}
 
+
+def make_storable(ds):
+    """
+    Ensures xr.Dataset can be stored as netcdf 
+    This entails:
+        - transforming xr.DataArray of Lith objects into a xr.Dataset of str
+
+    Args:
+        ds(xr.Dataset): dataset to be made convertible into netcdf
+    
+    Returns:
+        xr.Dataset
+    """ 
+    
+    if "lithology" in ds.variables:
+        lith = ds["lithology"]
+        ds = ds.drop("lithology")
+        ds = xr.merge([ds, Lith.to_dataset(lith)]) 
+
+    return ds
 
 
 @maybe_remove_tmpdir
@@ -144,7 +165,7 @@ def geocutout_prepare(geocutout,
         os.close(fd)
 
         with ProgressBar():
-            ds.to_netcdf(tmp)
+            make_storable(ds).to_netcdf(tmp)
         
         if geocutout.path.exists():
             geocutout.data.close()

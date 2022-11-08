@@ -8,7 +8,6 @@ from PIL import ImageColor
 
 nonelist = [None for _ in range(8)]
 
-
 def rgb2hex(r, g, b):
     return '#{:02x}{:02x}{:02x}'.format(r, g, b)
 
@@ -221,7 +220,7 @@ class Lith:
         return instance
 
     @classmethod
-    def to_dataset(cls, da):
+    def to_dataset(cls, data):
         """
         Transforms a xr.DataArray of Lith objects into a xr.Dataset with
         str entries that are the list version of Lith objects (see the 'tolist()'
@@ -229,18 +228,18 @@ class Lith:
         The resulting dataset can be stored as a netcdf file
         
         Args:
-            da(xr.DataArray): entries must be Lith objects 
+            data(xr.DataArray): entries must be Lith objects 
        
         Returns:
             xr.Dataset with Lith.index as vars. Coords are copied from da
 
         """ 
 
-        coords = da.coords
-        shape = da.shape
-        
-        da_np = da.to_numpy()
-        hold = np.zeros((8,)+da.shape).astype(str)
+        coords = data.coords
+        shape = data.shape
+
+        da_np = data.to_numpy()
+        hold = np.zeros((8,)+data.shape).astype(str)
 
         for i, j in product(range(shape[0]), 
                             range(shape[1])):
@@ -252,9 +251,35 @@ class Lith:
                 for i, var_name in enumerate(Lith.index)
             },
             coords=coords,
-        )     
+        )
+    
+    @classmethod
+    def to_dataarray(cls, data):
+        """
+        Takes an xr.Dataset and merges the variables Lith.index to a single
+        xr.DataArray, which is returned. Note the resulting xr.DataArray can
+        not be saved anymore
+        
+        Args:
+            data(xr.Dataset): dataset containing Lith.index as variables
+            
+        Returns
+            xr.DataArray:
+        """
+        
+        assert set(cls.index).issubset(list(data.variables))
 
-                
+        shape = data[cls.index[0]].shape
+        coords = data[cls.index[0]].coords
+
+        data_np = np.array([data[var_name] for var_name in Lith.index])
+        result = np.zeros(shape, dtype=Lith)
+
+        for i, j in product(range(shape[0]), range(shape[1])):
+            result[i,j] = Lith.from_list(data_np[:,i,j])
+        
+        return xr.DataArray(result, coords=coords) 
+
 
 def get_random_lith():
     """Passes a lithography oject, randomly filled out as it
