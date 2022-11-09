@@ -198,8 +198,10 @@ class Lith:
         
         aslist = deepcopy(nonelist)
         aslist[0] = self.major
-        aslist[1:1+len(self.minors)] = self.minors
-        aslist[4:4+len(self.others)] = self.others
+        if not self.minors is None:
+            aslist[1:1+min(len(self.minors), 3)] = self.minors[:3]
+        if not self.others is None:
+            aslist[4:4+min(len(self.others), 3)] = self.others[:3]
         aslist[-1] = rgb2hex(*self.colors)
 
         return aslist
@@ -234,6 +236,7 @@ class Lith:
             xr.Dataset with Lith.index as vars. Coords are copied from da
 
         """ 
+        assert isinstance(data, xr.DataArray)
 
         coords = data.coords
         shape = data.shape
@@ -267,6 +270,7 @@ class Lith:
             xr.DataArray:
         """
         
+        assert isinstance(data, xr.Dataset)
         assert set(cls.index).issubset(list(data.variables))
 
         shape = data[cls.index[0]].shape

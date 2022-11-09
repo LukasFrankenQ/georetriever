@@ -17,7 +17,6 @@ from utils.geo_utils import Lith
 
 feature_mapping = {
     "temperature": "era5",
-    # "temperature_soil": "era5",
     "lithology": "macrostrat",
 }
 
@@ -156,7 +155,6 @@ def geocutout_prepare(geocutout,
         attrs = non_bool_dict(geocutout.data.attrs)
         attrs.update(ds.attrs)
 
-            # ds = geocutout.data.merge(ds[new_feature]).assign_attrs(**attrs)
         ds = geocutout.data.merge(ds).assign_attrs(**attrs)
 
         directory, filename = os.path.split(str(geocutout.path))
@@ -164,14 +162,18 @@ def geocutout_prepare(geocutout,
 
         os.close(fd)
 
+
         with ProgressBar():
+            print(ds)
             make_storable(ds).to_netcdf(tmp)
         
         if geocutout.path.exists():
             geocutout.data.close()
             geocutout.path.unlink()
         os.rename(tmp, geocutout.path)
-   
+
         geocutout.data = xr.open_dataset(geocutout.path, chunks=geocutout.chunks) 
+
+    geocutout.to_object_mode()
 
     return geocutout 

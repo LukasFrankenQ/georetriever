@@ -31,7 +31,6 @@ features = {
 
 static_features = {"height"}
 
-
 def _rename_and_clean_coords(ds, add_lon_lat=True):
     """Rename 'longitude' and 'latitude' columns to 'x' and 'y' and fix roundings.
     Optionally (add_lon_lat, default:True) preserves latitude and longitude

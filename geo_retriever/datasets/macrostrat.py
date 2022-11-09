@@ -7,10 +7,28 @@ from PIL import ImageColor
 
 # from geo_retriever.utils import Lith
 from utils import Lith
+# from gis import maybe_swap_spatial_dims
 
 features = {"lithology": "lithology"}
+lith_coords = ["x", "y"]
 crs = 4326
 
+'''
+def _rename_and_clean_coords(ds, add_lon_lat=True):
+    """Rename 'longitude' and 'latitude' columns to 'x' and 'y' and fix roundings.
+    Optionally (add_lon_lat, default:True) preserves latitude and longitude
+    columns as 'lat' and 'lon'.
+    """
+    ds = ds.rename({"longitude": "x", "latitude": "y"})
+    # round coords since cds coords are float32 which would lead to mismatches
+    ds = ds.assign_coords(
+        x=np.round(ds.x.astype(float), 5), y=np.round(ds.y.astype(float), 5)
+    )
+    ds = maybe_swap_spatial_dims(ds)
+    if add_lon_lat:
+        ds = ds.assign_coords(lon=ds.coords["x"], lat=ds.coords["y"])
+    return ds
+'''
 
 def get_data(geocutout,
              feature,
@@ -48,8 +66,6 @@ def get_data(geocutout,
         result = result.content 
         result = StringIO(str(result, "utf-8"))
         result = gpd.read_file(result)
-        
-        print(result['lith'])
 
         lith = Lith()
         lith, best_info = lith.interpret_macrostrat(result["lith"], 
@@ -59,7 +75,7 @@ def get_data(geocutout,
             color = result.iloc[best_info].loc["color"]
             lith.colors = ImageColor.getcolor(color, "RGB")
         except TypeError: 
-            pass     
+            pass
                 
         polygon = result.iloc[best_info].loc["geometry"]
 
@@ -68,14 +84,15 @@ def get_data(geocutout,
 
     grid = grid["lith"].to_numpy().reshape(x.shape)
 
-    grid = xr.Dataset(
+
+    ds = xr.Dataset(
         data_vars=dict(
-            lithology=(list(coords.dims)[:2], grid),
+            lithology=(lith_coords, grid),
         ), 
         coords={
         name: vals
         for (name, vals), _ in zip(coords.indexes.items(), range(2))}
     )
-    grid = grid.assign_coords(lon=grid.coords["x"], lat=grid.coords["y"])
+    ds = ds.assign_coords(lon=ds.coords["x"], lat=ds.coords["y"])
 
-    return grid 
+    return ds 

@@ -1,3 +1,4 @@
+import os
 import xarray as xr
 import pandas as pd
 import numpy as np
@@ -10,6 +11,7 @@ from pathlib import Path
 from pyproj import CRS
 
 from gis import get_coords
+from utils import Lith
 
 import logging
 
@@ -83,6 +85,39 @@ class GeoCutout:
         self.data = data
         self.path = path
 
+    
+    def to_object_mode(self):
+        """
+        Sends self.data to object_mode, where some functionalities are
+        available but self.data can not be saved as netcdf
+        """
+
+        if self._object_mode:
+            return
+
+        self.data["lithology"] = Lith.to_dataarray(self.data)
+        self.data = self.data.drop(Lith.index)
+        
+
+    @property
+    def _object_mode(self):
+        """If True, self.data contains custom objects such as utils.Lith,
+            can not be stored as a netcdf in that case, but has additional
+            functionality"""
+        try:
+            self.data.to_netcdf('hold.nc')   
+            os.remove('hold.nc')
+        except ValueError:
+            return True 
+
+        return False
+
+
+    @property
+    def _saveable_mode(self):
+        """Returns if self.data can currently be stored as a netcdf"""
+        return not self._object_mode
+        
     
     @property 
     def name(self):
