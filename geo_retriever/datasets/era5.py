@@ -20,16 +20,16 @@ except ImportError:
     def nullcontext():
         yield
 
+
 logger = logging.getLogger(__name__)
 
 crs = 4326
 
 logging.warn("Era 5 missing features: height")
-features = {
-    "temperature": ["temperature", "soil temperature"]
-}
+features = {"temperature": ["temperature", "soil temperature"]}
 
 static_features = {"height"}
+
 
 def _rename_and_clean_coords(ds, add_lon_lat=True):
     """Rename 'longitude' and 'latitude' columns to 'x' and 'y' and fix roundings.
@@ -63,7 +63,7 @@ def _area(coords):
     # North, West, South, East. Default: global
     x0, x1 = coords["x"].min().item(), coords["x"].max().item()
     y0, y1 = coords["y"].min().item(), coords["y"].max().item()
-    return [y1, x0, y0, x1] 
+    return [y1, x0, y0, x1]
 
 
 def retrieval_times(coords, static=False):
@@ -109,7 +109,7 @@ def noisy_unlink(path):
         os.unlink(path)
     except PermissionError:
         logger.error(f"Unable to delete file {path}, as it is still in use.")
- 
+
 
 def retrieve_data(product, chunks=None, tmpdir=None, lock=None, **updates):
     """
@@ -129,7 +129,7 @@ def retrieve_data(product, chunks=None, tmpdir=None, lock=None, **updates):
         info_callback=logger.debug, debug=logging.DEBUG >= logging.root.level
     )
     result = client.retrieve(product, request)
-    
+
     if lock is None:
         lock = nullcontext()
 
@@ -142,38 +142,33 @@ def retrieve_data(product, chunks=None, tmpdir=None, lock=None, **updates):
         varstr = "".join(["\t * " + v + f" ({yearstr})\n" for v in variables])
         logger.info(f"CDS: Downloading variables\n{varstr}")
         result.download(target)
-    
+
     ds = xr.open_dataset(target, chunks=chunks or {})
     # if tmpdir is None:
-        # logger.debug(f"Adding finalizer for {target}")
-        # weakref.finalize(ds._file_obj._manager, noisy_unlink, target)
+    # logger.debug(f"Adding finalizer for {target}")
+    # weakref.finalize(ds._file_obj._manager, noisy_unlink, target)
 
     return ds
 
 
-def get_data(geocutout, 
-             feature,
-             tmpdir=None,
-             lock=None,
-             **creation_parameters
-             ):
+def get_data(geocutout, feature, tmpdir=None, lock=None, **creation_parameters):
 
     coords = geocutout.coords
-    
+
     retrieval_params = {
         "product": "reanalysis-era5-single-levels",
-        "area": _area(geocutout.coords),        
+        "area": _area(geocutout.coords),
         "chunks": geocutout.chunks,
         "grid": [geocutout.dx, geocutout.dy],
         "lock": lock,
     }
 
     coords = geocutout.coords
-    
+
     func = globals().get(f"get_data_{feature}")
-    
+
     def retrieve_once(time):
-        return func({**retrieval_params, **time}) 
+        return func({**retrieval_params, **time})
 
     datasets = map(retrieve_once, retrieval_times(coords))
 

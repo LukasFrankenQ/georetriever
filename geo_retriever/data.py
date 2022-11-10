@@ -10,6 +10,7 @@ from dask.utils import SerializableLock
 from dask.diagnostics import ProgressBar
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 from datasets import modules as datamodules
@@ -33,7 +34,7 @@ def get_feature(geocutout, module, feature, tmpdir=None):
     datasets = list()
 
     get_data = datamodules[module].get_data
-     
+
     feature_data = delayed(get_data)(
         geocutout, feature, tmpdir=tmpdir, lock=lock, **parameters
     )
@@ -44,7 +45,7 @@ def get_feature(geocutout, module, feature, tmpdir=None):
     ds = xr.merge(datasets, compat="equals")
 
     for v in ds:
-        
+
         ds[v].attrs["module"] = module
         fd = datamodules[module].features.items()
         ds[v].attrs["features"] = [k for k, l in fd if v in l].pop()
@@ -67,7 +68,8 @@ def maybe_remove_tmpdir(func):
                 rmtree(kwargs["tmpdir"])
         return res
 
-    return wrapper    
+    return wrapper
+
 
 def non_bool_dict(d):
     """Convert bool to int for netCDF4 storing"""
@@ -76,30 +78,27 @@ def non_bool_dict(d):
 
 def make_storable(ds):
     """
-    Ensures xr.Dataset can be stored as netcdf 
+    Ensures xr.Dataset can be stored as netcdf
     This entails:
         - transforming xr.DataArray of Lith objects into a xr.Dataset of str
 
     Args:
         ds(xr.Dataset): dataset to be made convertible into netcdf
-    
+
     Returns:
         xr.Dataset
-    """ 
-    
+    """
+
     if "lithology" in ds.variables:
         lith = ds["lithology"]
         ds = ds.drop("lithology")
-        ds = xr.merge([ds, Lith.to_dataset(lith)]) 
+        ds = xr.merge([ds, Lith.to_dataset(lith)])
 
     return ds
 
 
 @maybe_remove_tmpdir
-def geocutout_prepare(geocutout, 
-                      features=None, 
-                      tmpdir=None, 
-                      overwrite=False):
+def geocutout_prepare(geocutout, features=None, tmpdir=None, overwrite=False):
 
     """
     Parameters
@@ -124,33 +123,33 @@ def geocutout_prepare(geocutout,
     logger.warning("Overwrite not yet implemented")
 
     if geocutout.prepared and not overwrite:
-        logger.info("GeoCutout already prepared") 
+        logger.info("GeoCutout already prepared")
         return geocutout
-    
+
     logger.info(f"Storing temporary files in {tmpdir}")
-   
+
     features = atleast_1d(features) if features else slice(None)
     prepared = list(atleast_1d(geocutout.data.attrs["prepared_features"]))
 
     logging.warning("Double download of prepared features not yet prevented")
 
     for feature in features:
-        assert feature in feature_mapping, f"No module for feature {feature} " + \
-            f"\n Available features: {feature_mapping}"
+        assert feature in feature_mapping, (
+            f"No module for feature {feature} "
+            + f"\n Available features: {feature_mapping}"
+        )
 
     logging.warning("Double importing not prevented yet")
     for feature in features:
         module = feature_mapping[feature]
 
-        logging.info(f"Calculating {feature} with module {module}:") 
+        logging.info(f"Calculating {feature} with module {module}:")
 
         ds = get_feature(geocutout, module, feature, tmpdir=tmpdir)
 
         prepared += [key for key in ds.keys()]
 
-        geocutout.data.attrs.update(dict(
-            prepared_features=list(prepared)
-            ))
+        geocutout.data.attrs.update(dict(prepared_features=list(prepared)))
 
         attrs = non_bool_dict(geocutout.data.attrs)
         attrs.update(ds.attrs)
@@ -162,18 +161,17 @@ def geocutout_prepare(geocutout,
 
         os.close(fd)
 
-
         with ProgressBar():
             print(ds)
             make_storable(ds).to_netcdf(tmp)
-        
+
         if geocutout.path.exists():
             geocutout.data.close()
             geocutout.path.unlink()
         os.rename(tmp, geocutout.path)
 
-        geocutout.data = xr.open_dataset(geocutout.path, chunks=geocutout.chunks) 
+        geocutout.data = xr.open_dataset(geocutout.path, chunks=geocutout.chunks)
 
     geocutout.to_object_mode()
 
-    return geocutout 
+    return geocutout
