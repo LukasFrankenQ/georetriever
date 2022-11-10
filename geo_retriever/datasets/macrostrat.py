@@ -82,8 +82,7 @@ def get_data(geocutout,
         assign_mask = grid["geometry"].within(polygon)
         grid.loc[assign_mask, "lith"] = lith
 
-    grid = grid["lith"].to_numpy().reshape(x.shape)
-
+    grid = grid["lith"].to_numpy().reshape(x.shape[::-1])
 
     ds = xr.Dataset(
         data_vars=dict(

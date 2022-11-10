@@ -255,6 +255,7 @@ class Lith:
             },
             coords=coords,
         )
+
     
     @classmethod
     def to_dataarray(cls, data):
