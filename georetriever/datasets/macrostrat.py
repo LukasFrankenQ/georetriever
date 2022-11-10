@@ -5,7 +5,7 @@ import xarray as xr
 from io import StringIO
 from PIL import ImageColor
 
-from utils import Lith
+from ..utils import Lith
 
 features = {"lithology": "lithology"}
 lith_coords = ["x", "y"]

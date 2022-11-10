@@ -13,8 +13,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-from datasets import modules as datamodules
-from utils.geo_utils import Lith
+from .datasets import modules as datamodules
+from .utils.geo_utils import Lith
 
 feature_mapping = {
     "temperature": "era5",
@@ -162,7 +162,6 @@ def geocutout_prepare(geocutout, features=None, tmpdir=None, overwrite=False):
         os.close(fd)
 
         with ProgressBar():
-            print(ds)
             make_storable(ds).to_netcdf(tmp)
 
         if geocutout.path.exists():

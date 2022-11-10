@@ -10,8 +10,9 @@ from shapely.geometry import box
 from pathlib import Path
 from pyproj import CRS
 
-from gis import get_coords
-from utils import Lith
+from .gis import get_coords
+from .utils import Lith
+from .data import geocutout_prepare
 
 import logging
 
@@ -83,15 +84,49 @@ class GeoCutout:
         self.data = data
         self.path = path
 
+    def prepare(self, *args, **kwargs):
+        """Obtains the data. See data.geocutout_prepare for details"""
+        geocutout_prepare(self, *args, **kwargs)
+
+    def to_netcdf(self, filename):
+        """
+        Wrapper of xarray.Dataset().to_netcdf that makes parts of retrieved data
+        storable before storing
+        """
+        self.to_saveable_mode()
+        self.data.to_netcdf(filename)
+        self.to_object_mode()
+
+    @staticmethod
+    def open_dataset(filename):
+        """
+        Wrapper of xarray.open_dataset() that reads filename and transforms
+        retrieved data into object mode.
+        Overwrites self.data
+        """
+        ds = xr.open_dataset(filename)
+        if "major" in ds.variables:
+            ds["lithology"] = Lith.to_dataarray(ds)
+        ds = ds.drop(Lith.index)
+        return ds
+
+    def to_saveable_mode(self):
+        """
+        Sends self.data to saveable_mode, where some functionalities
+        are not available but self.data can be saved as netcdf
+        """
+        if self._saveable_mode:
+            return
+        self.data = xr.merge([self.data, Lith.to_dataset(self.data["lithology"])])
+        self.data = self.data.drop("lithology")
+
     def to_object_mode(self):
         """
         Sends self.data to object_mode, where some functionalities are
         available but self.data can not be saved as netcdf
         """
-
         if self._object_mode:
             return
-
         self.data["lithology"] = Lith.to_dataarray(self.data)
         self.data = self.data.drop(Lith.index)
 

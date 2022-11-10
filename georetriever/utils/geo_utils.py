@@ -5,6 +5,7 @@ import pandas as pd
 import xarray as xr
 from copy import deepcopy
 from PIL import ImageColor
+from typing import Iterable
 
 nonelist = [None for _ in range(8)]
 
@@ -92,9 +93,16 @@ class Lith:
         best_info = None
 
         for i, entry in col.iteritems():
+            liths = list()
+
             minor_major = None
 
             entry = entry.lower()
+
+            if "sedimentary rocks" in entry:
+                liths.append("sedimentary rocks")
+                entry = entry.replace("sedimentary rocks", "")
+
             if "major" in entry:
                 minor_major = get_minor_major(entry)
                 self.composition.update(minor_major)
@@ -108,7 +116,7 @@ class Lith:
             else:
                 entry = re.sub(r"[^a-zA-Z0-9 ]", "", entry)
                 entry = entry.replace(" and", "")
-                liths = [lith for lith in entry.split(" ") if len(lith) > 0]
+                liths = liths + [lith for lith in entry.split(" ") if len(lith) > 0]
 
                 if isinstance(self.composition["others"], list):
                     self.composition["others"] = list(
@@ -129,7 +137,12 @@ class Lith:
             return returns
 
     def __repr__(self):
-        return f"Lithology composition: \n {self.composition}"
+        return f"{self.composition}"
+
+    def __eq__(self, other):
+        if not isinstance(other, Lith):
+            return False
+        return self.tolist() == other.tolist()
 
     @property
     def empty(self):
@@ -178,7 +191,7 @@ class Lith:
     @minors.setter
     def minors(self, value):
         """sets minor lithologies"""
-        if not isinstance(value, list):
+        if not isinstance(value, Iterable):
             value = [value]
         else:
             value = [val for val in value if val is not None]
@@ -192,7 +205,7 @@ class Lith:
     @others.setter
     def others(self, value):
         """sets unordered lithologies"""
-        if not isinstance(value, list):
+        if not isinstance(value, Iterable):
             value = [value]
         else:
             value = [val for val in value if val is not None]

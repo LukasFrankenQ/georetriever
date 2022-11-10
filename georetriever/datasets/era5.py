@@ -9,7 +9,7 @@ import cdsapi
 import logging
 from numpy import atleast_1d
 
-from gis import maybe_swap_spatial_dims
+from ..gis import maybe_swap_spatial_dims
 
 try:
     from contextlib import nullcontext
