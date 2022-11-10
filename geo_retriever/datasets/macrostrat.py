@@ -38,8 +38,7 @@ def get_data(geocutout,
         if not grid.loc[idx, "lith"] == -1:
             continue
 
-        request_params.update(lat=row.lat)
-        request_params.update(lng=row.lng)
+        request_params.update(dict(lat=row.lat, lng=row.lng))
 
         result = requests.get(api_link, params=request_params)
         
