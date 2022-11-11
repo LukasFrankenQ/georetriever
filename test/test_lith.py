@@ -1,5 +1,3 @@
-import pytest
-
 from georetriever.utils import Lith
 from georetriever.utils.geo_utils import get_random_lith
 
