@@ -1,5 +1,5 @@
 ## GeoRetriever 🗿🐕
-##### A Python package for array-based retrieval of geological data. In a second step, the data can be converted to localized thermal energy system suitability.
+##### A Python package for array-based retrieval of geological data. In a second step (available in a future version), the data can be converted to localized thermal energy system suitability.
 
 Based on the tools used in the great [atlite](https://github.com/PyPSA/atlite) package, GeoRetriever is supported by [dask](https://github.com/dask/dask) and [xarray](https://github.com/pydata/xarray) for parallelized requests of data chunks.
 When completed, the package will be able to retrieve all data relevant the following thermal systems:
@@ -19,7 +19,7 @@ The library is under development with more features being added in the future. T
 | Surface Temperature | [ERA5](https://www.ecmwf.int/en/forecasts/datasets/reanalysis-datasets/era5) | global | ✔️ |
 | Soil Temperature | [ERA5](https://www.ecmwf.int/en/forecasts/datasets/reanalysis-datasets/era5) | global | ✔️ |
 | Aquifer Presence |  | | ❌ |
-| Lithology Class |  | | ❌ |
+| Soil Type |  | | ❌ |
 
 ### Installation
 

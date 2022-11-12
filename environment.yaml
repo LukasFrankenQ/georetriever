@@ -1,0 +1,33 @@
+name: georetriever
+dependencies:
+- python>=3.6
+- pip
+- numpy
+- scipy
+- pandas>=0.25
+- xarray>=0.16.2
+- netcdf4
+- dask>=0.18.0 ,<2021.04.0
+- toolz
+- yaml
+- requests
+- geopandas
+- cdsapi
+- pyproj>=2.0
+- rasterio>1.2.10
+- shapely
+- Pillow
+- progressbar2
+- tqdm
+
+  # dev tools
+- black
+- pre-commit
+
+  # Recommended for pandas and xarray
+- bottleneck
+- numexpr
+
+  # For travis and testing
+- pip
+- pytest

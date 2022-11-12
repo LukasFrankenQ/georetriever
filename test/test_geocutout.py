@@ -1,7 +1,3 @@
-# simport os
-# import sys
-# sys.path.append(os.path.join(os.getcwd(), ".."))
-
 from georetriever import GeoCutout
 
 
@@ -31,9 +27,6 @@ def test_data_retrieval():
     )
 
     gc.prepare(features=["temperature", "lithology"])
-
-    print(gc.data)
-    print("loaded data: ", data)
 
     assert data.equals(gc.data)
 
