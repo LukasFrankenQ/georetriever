@@ -36,11 +36,11 @@ For instance:
 from georetriever import GeoCutout
 
 x = slice(-1, 1)
-y = slice(-1, 1)
-dx = 0.1
-dy = 0.1
+y = slice(50, 52)
+dx = 0.05
+dy = 0.05
 time = "2019-01-01"
-dt = "H"
+dt = "h"
 
 geocutout = GeoCutout(
     x=x,
