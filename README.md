@@ -2,11 +2,12 @@
 ##### A Python package for array-based retrieval of geological data. In a second step, the data can be converted to localized thermal energy system suitability.
 
 Based on the tools used in the great [atlite](https://github.com/PyPSA/atlite) package, GeoRetriever is supported by [dask](https://github.com/dask/dask) and [xarray](https://github.com/pydata/xarray) for parallelized requests of data chunks.
-The thermal systems of most interest are
+When completed, the package will be able to retrieve all data relevant the following thermal systems:
 
 - Borehole Thermal Energy Storage (BTES)
 - Aquifer Thermal Energy Storage (ATES)
 - Shallow Ground Source Heat Pumps (CSHP)
+- Water Source Heat Pumps (WSHP)
 - Pit Thermal Energy Storage (PTES)
 - Mine Thermal Energy Storage (MTES)
 
@@ -17,6 +18,52 @@ The library is under development with more features being added in the future. T
 | Lithology | [Macrostrat](https://macrostrat.org/)| global | ✔️|
 | Surface Temperature | [ERA5](https://www.ecmwf.int/en/forecasts/datasets/reanalysis-datasets/era5) | global | ✔️ |
 | Soil Temperature | [ERA5](https://www.ecmwf.int/en/forecasts/datasets/reanalysis-datasets/era5) | global | ✔️ |
+| Aquifer Presence |  | | ❌ |
+| Lithology Class |  | | ❌ |
+
+### Installation
+
+The package runs on `Python>=3.6` and is available from `pypi` via
+```
+pip install georetriever
+```
+
+### Example
+
+The package works through the `GeoCutout` object. During its initialization, the  spatial and temporal scale of the data is defined. Coordinates are in `(lon, lat)`. The actual retrieval of data starts when the `prepare()`, which takes the features of interest are passed method is called.
+For instance:
+```
+from georetriever import GeoCutout
+
+x = slice(-1, 1)
+y = slice(-1, 1)
+dx = 0.1
+dy = 0.1
+time = "2019-01-01"
+dt = "H"
+
+geocutout = GeoCutout(
+    x=x,
+    y=y,
+    dx=dx,
+    dy=dy,
+    time=time,
+    dt=dt,
+)
+
+geocutout.prepare(features=["soil temperature", "lithology"])
+
+print(geocutout.data)
+```
+
+##### Authors and Contact
+
+__Lukas Franken__ - [lukas.franken@ed.ac.uk](lukas.franken@ed.ac.uk)
+University of Edinburgh, Alan Turing Institute
+
+Big thanks to the team an __TU Berlin__ for [atlite](https://github.com/pypsa/atlite), the package this library is leaning on.
+
+
 
 
 
