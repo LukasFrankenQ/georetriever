@@ -92,7 +92,7 @@ class Lith:
 
         best_info = None
 
-        for i, entry in col.iteritems():
+        for i, entry in col.items():
             liths = list()
 
             minor_major = None

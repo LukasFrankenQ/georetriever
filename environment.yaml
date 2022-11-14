@@ -1,7 +1,9 @@
 name: georetriever
+channels:
+- conda-forge
+- defaults
 dependencies:
 - python>=3.6
-- pip
 - numpy
 - scipy
 - pandas>=0.25
@@ -16,9 +18,9 @@ dependencies:
 - pyproj>=2.0
 - rasterio>1.2.10
 - shapely
-- Pillow
 - progressbar2
 - tqdm
+- Pillow
 
   # dev tools
 - black
