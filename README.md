@@ -33,6 +33,8 @@ The package runs on `Python>=3.6` and is available from `pypi` via
 pip install georetriever
 ```
 
+Note that for the feauture `"temperature"`, the API to `ERA5` will be used, which requires registration and setting up of the CDS API key as [here](https://cds.climate.copernicus.eu/api-how-to).
+
 ### Example
 
 The package works through the `GeoCutout` object. During its initialization, the  spatial and temporal scale of the data is defined. Coordinates are in `(lon, lat)`. The actual retrieval of data starts when the `prepare()`, which takes the features of interest are passed method is called.
@@ -56,7 +58,7 @@ geocutout = GeoCutout(
     dt=dt,
 )
 
-geocutout.prepare(features=["soil temperature", "lithology"])
+geocutout.prepare(features=["temperature", "lithology"])
 
 print(geocutout.data)
 ```
