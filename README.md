@@ -68,4 +68,4 @@ print(geocutout.data)
 __Lukas Franken__ - [lukas.franken@ed.ac.uk](lukas.franken@ed.ac.uk)
 University of Edinburgh, Alan Turing Institute
 
-Big thanks to the team an __TU Berlin__ for [atlite](https://github.com/pypsa/atlite), the package this library is leaning on.
+Big thanks to the team at __TU Berlin__ for [atlite](https://github.com/pypsa/atlite), the package this library is leaning on.
