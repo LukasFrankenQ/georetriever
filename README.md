@@ -33,7 +33,7 @@ The package runs on `Python>=3.6` and is available from `pypi` via
 pip install georetriever
 ```
 
-Note that for the feauture `"temperature"`, the API to `ERA5` will be used, which requires registration and setting up of the CDS API key as [here](https://cds.climate.copernicus.eu/api-how-to).
+Note that for the feature `"temperature"`, the API to `ERA5` will be used, which requires registration and setting up of the CDS API key as [here](https://cds.climate.copernicus.eu/api-how-to).
 
 ### Example
 
