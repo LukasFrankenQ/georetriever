@@ -7,6 +7,9 @@ from copy import deepcopy
 from PIL import ImageColor
 from typing import Iterable
 
+from ..geophysics.stats_utils import get_mean_variance
+
+
 nonelist = [None for _ in range(8)]
 
 
@@ -55,7 +58,7 @@ class Lith:
     def __init__(self, lith=None, /, comp=None):
 
         if comp is None:
-            self.composition = dict(major=None, minors=None, others=None)
+            self.composition = dict(major=None, minors=[], others=[])
         else:
             self.composition = comp
 
@@ -302,6 +305,47 @@ class Lith:
             result[i, j] = Lith.from_list(data_np[:, i, j])
 
         return xr.DataArray(result, coords=coords)
+
+    @property
+    def thermal_conductivity(self):
+        from ..geophysics import thermal_conductivity
+
+        db = thermal_conductivity.thermal_conductivity_database
+
+        # prepares arguments for stats_utils.get_mean_variance
+        # see that function for justification
+        means, vars = list(), list()
+        alphas, betas = list(), list()
+
+        if self.major:
+            params = db.get(self.major, db["generic"])
+            means.append(params[0])
+            vars.append(params[1])
+            alphas.append(0.50)
+            betas.append(0.99)
+
+        for minor in self.minors:
+            params = db.get(minor, db["generic"])
+            means.append(params[0])
+            vars.append(params[1])
+            alphas.append(0.0)
+            betas.append(0.50)
+
+        if not means:
+            for other in self.others:
+                params = db.get(other, db["generic"])
+                means.append(params[0])
+                vars.append(params[1])
+                alphas.append(0.0)
+                betas.append(1.0)
+
+        assert means, f"Empty Lith: {self.composition}"
+
+        tc_mean, tc_var = get_mean_variance(
+            np.array(means), np.array(vars), np.array(alphas), np.array(betas)
+        )
+
+        return tc_mean, tc_var
 
 
 def get_random_lith():

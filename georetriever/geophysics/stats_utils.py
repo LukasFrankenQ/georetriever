@@ -1,5 +1,7 @@
 import numpy as np
 import logging
+from scipy import stats
+from scipy.optimize import minimize
 
 
 def get_mean_variance(
@@ -33,7 +35,7 @@ def get_mean_variance(
         means(np.ndarray[float]): means of X
         vars(np.ndarray[float]): variances of X
         alphas(np.ndarray[float]): lower bounds of Y
-        betas(np.ndarray[float]): uppers bounds of Y
+        betas(np.ndarray[float]): upper bounds of Y
         n_samples(int): number of MC samples
 
     Returns:
@@ -72,7 +74,35 @@ def get_mean_variance(
     mean = (means * EYi).sum()
     variance = (vars * VYi + vars * EYi**2 + means**2 * VYi).sum()
 
-    return mean, variance
+    return np.around(mean, decimals=4), np.around(variance, decimals=4)
+
+
+def get_mean_var(lower, upper, conf=0.95):
+    """
+    Returns loc, scale of normal dist with lower and upper
+    as -confidence interval.
+
+    Args:
+        lower(float): lower interval boundary
+        upper(float): upper interval boundary
+        conf(float): size of confidence interval
+
+    Returns:
+        float, float: mean and std of dist
+    """
+
+    assert 0 < conf < 1, "confidence interval size should be >0, <1"
+
+    mean = lower + (upper - lower) / 2
+    upper_cdf_cutoff = 0.5 + conf / 2
+
+    def dist(std):
+        val = stats.norm.ppf(upper_cdf_cutoff, loc=mean, scale=std)
+        return (val - upper) ** 2
+
+    scale = minimize(dist, [mean]).x[0]
+
+    return mean, scale**2
 
 
 if __name__ == "__main__":
