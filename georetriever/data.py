@@ -19,6 +19,7 @@ from .utils.geo_utils import Lith
 feature_mapping = {
     "temperature": "era5",
     "lithology": "macrostrat",
+    "aquifer_depth": "aquifer_depth",
 }
 
 
