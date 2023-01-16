@@ -58,13 +58,6 @@ def get_data(cutout, *args, **kwargs):
         data[["X", "Y"]].to_numpy(), data["Basement"].values, (x_mesh, y_mesh)
     )
 
-    print("in AQUIFER")
-    print(grid_values.shape)
-    print("coords:")
-    print(coords)
-    print("aquifer coords")
-    print(aquifer_depth_coords)
-
     ds = xr.Dataset(
         data_vars=dict(
             aquifer_depth=(aquifer_depth_coords, grid_values),
