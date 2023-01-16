@@ -17,7 +17,7 @@ dependencies:
 - cdsapi
 - pyproj>=2.0
 - rasterio>1.2.10
-- shapely
+- shapely==1.8.4
 - progressbar2
 - tqdm
 - Pillow
