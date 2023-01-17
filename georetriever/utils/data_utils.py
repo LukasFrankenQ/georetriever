@@ -48,7 +48,8 @@ def polygons_to_xarray(da, gdf, col):
             "geometry": boxes,
             "center_x": x,
             "center_y": y,
-        }
+        },
+        crs="EPSG:4326",
     )
     arr_as_df["saveindex"] = arr_as_df.index
     arr_as_df[col] = np.zeros(len(arr_as_df))
