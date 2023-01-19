@@ -65,6 +65,13 @@ def get_data(
 
     grid = grid["lith"].to_numpy().reshape(x.shape[::-1])
 
+    print("in macrostrat")
+    print(grid.shape)
+    print("coords:")
+    print(coords)
+    print("lith coords")
+    print(lith_coords)
+
     ds = xr.Dataset(
         data_vars=dict(
             lithology=(lith_coords, grid),
