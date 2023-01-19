@@ -21,6 +21,7 @@ dependencies:
 - progressbar2
 - tqdm
 - Pillow
+- wget
 
   # dev tools
 - black
