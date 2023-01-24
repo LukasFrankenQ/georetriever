@@ -1,6 +1,7 @@
 import wget
 import os
 from pathlib import Path
+import urllib.request
 
 
 def maybe_download(filepath, url):
@@ -26,7 +27,12 @@ def maybe_download(filepath, url):
 
 
 def maybe_download_watershed():
-    raise NotImplementedError("implement me")
+
+    opener = urllib.request.URLopener()
+    opener.addheader(
+        "User-Agent",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36",
+    )
 
 
 if __name__ == "__main__":
