@@ -12,7 +12,7 @@ def polygons_to_xarray(da, gdf, cols):
     that have overlap
     Then iterates over the boxes, to each assigning the weighted
     average of gdf[col] with weights determined by intersection area
-    per polygon.
+    per one polygon.
     Conducts all math in the respective UTM zone, to accurately
     respect distances.
 
